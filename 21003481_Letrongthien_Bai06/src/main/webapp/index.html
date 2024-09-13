@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <style>
+        #chatbox {
+            border: 1px solid black;
+            height: 300px;
+            width: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+        }
+        p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Chat</h1>
+
+    <!-- Username Input -->
+    <input type="text" id="username" placeholder="Enter your username">
+    <button onclick="connect()">Connect</button>
+    
+    <br><br>
+
+    <!-- Message Input -->
+    <input type="text" id="message" placeholder="Enter your message" disabled>
+    <button onclick="sendMessage()" id="sendButton" disabled>Send</button>
+
+    <br><br>
+
+    <!-- Chatbox for displaying messages -->
+    <div id="chatbox"></div>
+
+    <script>
+        var websocket;
+        var username;
+
+        // Connect to WebSocket server
+        function connect() {
+            username = document.getElementById("username").value;
+            if (username === "") {
+                alert("Please enter a username");
+                return;
+            }
+            
+            // Open WebSocket connection
+            websocket = new WebSocket("ws://localhost:8082/21003481_Letrongthien_Bai06/chat/" + username);
+
+            websocket.onopen = function () {
+                document.getElementById("chatbox").innerHTML += "<p>Connected as <b>" + username + "</b></p>";
+                document.getElementById("message").disabled = false; // Enable message input
+                document.getElementById("sendButton").disabled = false; // Enable send button
+            };
+
+            websocket.onmessage = function (event) {
+                // When a message is received from the server, display it in the chatbox
+                document.getElementById("chatbox").innerHTML += "<p>" + event.data + "</p>";
+                scrollToBottom();  // Auto-scroll to the latest message
+            };
+
+            websocket.onclose = function () {
+                document.getElementById("chatbox").innerHTML += "<p>Connection closed</p>";
+                document.getElementById("message").disabled = true; // Disable message input
+                document.getElementById("sendButton").disabled = true; // Disable send button
+            };
+
+            websocket.onerror = function (error) {
+                document.getElementById("chatbox").innerHTML += "<p><i>Error: " + error + "</i></p>";
+            };
+        }
+
+        // Send message via WebSocket and display it immediately
+        function sendMessage() {
+            var message = document.getElementById("message").value;
+            if (message === "") {
+                alert("Please enter a message");
+                return;
+            }
+
+            // Append the message to the chatbox immediately
+            document.getElementById("chatbox").innerHTML += "<p><b>" + username + ":</b> " + message + "</p>";
+            scrollToBottom(); // Auto-scroll to the latest message
+
+            // Send the message to the WebSocket server
+            websocket.send(message);
+
+            // Clear input after sending
+            document.getElementById("message").value = "";
+        }
+
+        // Scroll to the bottom of the chatbox
+        function scrollToBottom() {
+            var chatbox = document.getElementById("chatbox");
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
